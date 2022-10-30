@@ -1,0 +1,13 @@
+.filter-title{
+    margin: 20px;
+}
+.filter-container{
+    display: flex;
+    justify-content: space-between;
+    margin: 20px;
+}
+
+.filter{
+    display: flex;
+    align-items: center;
+}

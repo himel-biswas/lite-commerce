@@ -1,0 +1,21 @@
+.carousel-container {
+  padding: 40px;
+  background: #fbf0f4;
+}
+
+.carousel-single{
+    display: flex !important;
+    height: 400px;
+    align-items: center;
+    justify-content: space-evenly;
+    
+}
+
+.carousel-single img{
+    max-width: 40%;
+    max-height: 90%;
+    padding: 20px;
+}
+
+
+
