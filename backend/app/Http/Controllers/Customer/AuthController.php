@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 use App\Models\User;
+use App\Traits\ApiResponser;
 
 class AuthController extends Controller
 {
@@ -13,47 +15,66 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $attr = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed'
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:5',
+            'confirm_password' => 'required|same:password',
         ]);
+
+        if ($validator->fails()) {
+            return $this->error('Validation error', 401, $validator->errors());
+        }
 
         $user = User::create([
-            'name' => $attr['name'],
-            'role' => 'customer',
-            'password' => bcrypt($attr['password']),
-            'email' => $attr['email']
+            'name' => $request->name,
+            'is_admin' => false,
+            'password' => bcrypt($request->password),
+            'email' => $request->email
         ]);
 
-        return $this->success([
-            'token' => $user->createToken('api-token')->plainTextToken
-        ]);
+        return $this->success(
+            [
+                'token' => $user->createToken('api-token')->plainTextToken,
+            ],
+            'Successfully registered'
+        );
     }
 
     public function login(Request $request)
     {
-        $attr = $request->validate([
-            'email' => 'required|string|email|',
-            'password' => 'required|string|min:6'
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|min:5',
         ]);
 
-        if (!auth()->attempt($attr)) {
+        if ($validator->fails()) {
+            return $this->error('Validation error', 401, $validator->errors());
+        }
+
+        if (!auth()->attempt(['email' => $request->email, 'password' => $request->password])) {
             return $this->error('Credentials not match', 401);
         }
 
-        return $this->success([
-            'token' => auth()->user()->createToken('API Token')->plainTextToken
-        ]);
+        return $this->success(
+            [
+                'token' => auth()->user()->createToken('API Token')->plainTextToken,
+            ],
+            'Successfully logged in'
+        );
     }
 
     public function logout()
     {
         auth()->user()->tokens()->delete();
 
-        return [
-            'message' => 'Tokens Revoked'
-        ];
+        return $this->success(null, 'Successfully logged out');
     }
 
+    public function me()
+    {
+        $data = auth()->user();
+
+        return $this->success($data, 'Successfully retreived my info');
+    }
 }
